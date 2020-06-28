@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Colors.fs" />
     <Compile Include="Snake.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>

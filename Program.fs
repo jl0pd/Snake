@@ -20,7 +20,7 @@ type MainWindow() as this =
         base.MinWidth <- 400.0
         base.MinHeight <- 400.0
 
-        let keyDownHanler _ =
+        let keyDownHandler _ =
             let sub dispatch =
                 this.KeyDown.Add (fun eventArgs ->
                     match eventArgs.Key with
@@ -44,16 +44,18 @@ type MainWindow() as this =
                     Game.Update |> dispatch
                     true
 
-                DispatcherTimer.Run(Func<bool>(invoke), TimeSpan.FromMilliseconds 100.0)
+                DispatcherTimer.Run(Func<_>(invoke), TimeSpan.FromMilliseconds 100.0)
                 |> ignore
 
             Cmd.ofSub sub
 
         Elmish.Program.mkSimple (fun () -> Game.init ()) Game.update Game.view
         |> Program.withHost this
+#if DEBUG
         |> Program.withConsoleTrace
+#endif
         |> Program.withSubscription timer
-        |> Program.withSubscription keyDownHanler
+        |> Program.withSubscription keyDownHandler
         |> Program.run
 
 

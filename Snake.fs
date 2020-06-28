@@ -5,9 +5,6 @@ open System
 open Avalonia.FuncUI.DSL
 open Avalonia.Controls
 open Avalonia.Layout
-open Avalonia.Input
-open Avalonia.FuncUI.Types
-open Avalonia.Controls
 open Avalonia.Controls.Primitives
 open Avalonia.FuncUI.Helpers
 
@@ -81,7 +78,8 @@ module Snake =
             let newHead = getNewHead old snake.Direction
 
             let newCells =
-                if snake.MustGrow then newHead :: snake.Cells else newHead :: (List.skipLast 1 snake.Cells)
+                newHead
+                :: (if snake.MustGrow then snake.Cells else List.skipLast 1 snake.Cells)
 
             Ok
                 { snake with
@@ -169,7 +167,7 @@ module Game =
 
     let update msg state =
         match msg with
-        | Update when not state.IsPaused ->
+        | Update when not state.IsPaused && not state.IsOver ->
             match move state.Snake with
             | Error _ -> state
             | Ok snake ->
@@ -222,15 +220,29 @@ module Game =
               UniformGrid.children
                   (createFilledBoard state
                    |> Array2D.flat
-                   |> Array.map (fun { X = x; Y = y; Type = t } ->
+                   |> Array.map (fun { Type = t } ->
                        let color =
                            match t with
-                           | Apple -> "#AA0000"
-                           | CellType.Empty -> "#040404"
+                           | Apple -> "#FF0000"
+                           | CellType.Empty -> "#000000"
                            | Wall -> "#FFFFFF"
-                           | Snake -> "#00AA00"
+                           | Snake -> "#00FF00"
 
-                       TextBlock.create [ TextBlock.background color ]
+                       let reduceBrightness (color: string) =
+                           let substract value from = max 0.0 (from - value)
+                           color.[1..]
+                           |> Color.RGB.OfString
+                           |> Option.get
+                           |> fun rgb -> rgb.AsTuple
+                           |> Tuple3.mapEach (substract 120.0)
+                           |> Color.RGB.OfTuple
+                           |> Color.toColorString
+
+                       Border.create
+                           [ Border.padding 3.
+                             Border.background (reduceBrightness color)
+                             Border.child (Border.create [ Border.background color ]) ]
+
                        |> generalize)
                    |> Array.toList) ]
 
